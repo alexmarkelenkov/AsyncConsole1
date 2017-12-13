@@ -10,7 +10,13 @@ namespace ConsoleApplication1
     {
         static void Main(string[] args)
         {
+            
+        }
+
+        static async Task ProcessImageAsync(byte[] image)
+        {
 
         }
+
     }
 }
