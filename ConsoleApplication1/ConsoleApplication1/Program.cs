@@ -13,10 +13,12 @@ namespace ConsoleApplication1
     class Program
     {
         private static IEnumerable<string> uris;
+        private static int N = 15;
         
 
         static void Main(string[] args)
         {
+            
             try
             {
                 ProcessImagesAsync().Wait();
@@ -61,11 +63,12 @@ namespace ConsoleApplication1
             }
             catch (Exception e)
             {
-
                 Console.WriteLine(e.Message);
             }
+            
 
-
+            DirectoryInfo dir = new DirectoryInfo(Directory.GetCurrentDirectory() + "\\img");
+            Parallel.ForEach(dir.GetFiles(), DetectCat); 
             
 
             Console.ReadLine();
@@ -77,7 +80,7 @@ namespace ConsoleApplication1
             var address = CatServer.Cutespaw;
             var document = await BrowsingContext.New(config).OpenAsync(address);            
             var imgSelector = CatServer.Selectors[address];             
-            uris = document.QuerySelectorAll(imgSelector).Select(item => item.GetAttribute("src")).Take(50).ToList() ;   
+            uris = document.QuerySelectorAll(imgSelector).Select(item => item.GetAttribute("src")).Take(N).ToList() ;   
             
         }
 
@@ -94,10 +97,10 @@ namespace ConsoleApplication1
             }
         }
 
-        static void DetectCat(string image)
+        static void DetectCat(FileInfo f)
         {
             OpenCvSharp.CascadeClassifier cc = new OpenCvSharp.CascadeClassifier("haarcascade_frontalcatface.xml");
-            var img = new OpenCvSharp.Mat(image);
+            var img = new OpenCvSharp.Mat(f.FullName);
             var img2 = new OpenCvSharp.Mat();
             img.ConvertTo(img2, OpenCvSharp.MatType.CV_8U);
             var cats = cc.DetectMultiScale(img2);
