@@ -1,6 +1,7 @@
 ﻿using AngleSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -10,7 +11,7 @@ namespace ConsoleApplication1
 {
     class Program
     {
-        private static IEnumerable<string> imgs;
+        private static IEnumerable<string> uris;
 
         static void Main(string[] args)
         {
@@ -22,7 +23,19 @@ namespace ConsoleApplication1
             {
 
                 Console.WriteLine(e.Flatten().ToString());
-            } 
+            }
+
+
+            int i = 0;            
+
+            foreach (var uri in uris)
+            {
+                Console.WriteLine(uri);
+                GetImageAsync(uri, Directory.GetCurrentDirectory().ToString() + "\\img\\cat" + i.ToString() + ".jpg");
+                i++;
+            }
+
+
 
             Console.ReadLine();
         }
@@ -38,17 +51,22 @@ namespace ConsoleApplication1
             // This CSS selector gets the desired content
             var imgSelector = "img";
             // Perform the query to get all imgs with the content
-            imgs = document.QuerySelectorAll(imgSelector).Select(item => item.GetAttribute("src")).ToList();            
-
-            foreach (var image in imgs)
-            {
-                Console.WriteLine(image);
-            }
+            uris = document.QuerySelectorAll(imgSelector).Select(item => item.GetAttribute("src")).Take(5).ToList() ;   
+            
         }
 
-        static async Task GetImageAsync(Uri uri, WebClient webClient)
+        static async Task GetImageAsync(string uri, string filename)
         {
+            WebClient webClient = new WebClient();
+            try
+            {
+                await webClient.DownloadFileTaskAsync("https:" + uri, filename);
+            }
+            catch (Exception e)
+            {
 
+                Console.WriteLine(e.Message);
+            }
         }
 
     }
