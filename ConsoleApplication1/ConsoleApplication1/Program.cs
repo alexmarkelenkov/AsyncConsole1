@@ -1,6 +1,7 @@
 ﻿using AngleSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -12,6 +13,7 @@ namespace ConsoleApplication1
     class Program
     {
         private static IEnumerable<string> uris;
+        
 
         static void Main(string[] args)
         {
@@ -21,37 +23,61 @@ namespace ConsoleApplication1
             }
             catch (AggregateException e)
             {
-
-                Console.WriteLine(e.Flatten().ToString());
+                Console.WriteLine("AggregateException:\n" + e.Flatten().ToString());
             }
 
 
-            int i = 0;            
-
-            foreach (var uri in uris)
+            try
             {
-                Console.WriteLine(uri);
-                GetImageAsync(uri, Directory.GetCurrentDirectory().ToString() + "\\img\\cat" + i.ToString() + ".jpg");
-                i++;
+                int i = 0;
+                List<Task> imageSaveTasks = new List<Task>();
+                Task t;
+
+                var sw = new Stopwatch();
+                sw.Start();
+                foreach (var uri in uris)
+                {
+                    Console.WriteLine(uri);
+
+                    //WebClient webClient = new WebClient();
+                    //try
+                    //{
+                    //    webClient.DownloadFile(uri, Directory.GetCurrentDirectory().ToString() + "\\img\\cat" + i.ToString() + ".jpg");
+                    //}
+                    //catch (Exception e)
+                    //{
+
+                    //    Console.WriteLine(e.Message);
+                    //}
+
+                    t = GetImageAsync(uri, Directory.GetCurrentDirectory().ToString() + "\\img\\cat" + i.ToString() + ".jpg");
+                    imageSaveTasks.Add(t);
+
+                    i++;
+                }
+                Task.WaitAll(imageSaveTasks.ToArray());
+                sw.Stop();
+                Console.WriteLine(sw.Elapsed.TotalMilliseconds);
+            }
+            catch (Exception e)
+            {
+
+                Console.WriteLine(e.Message);
             }
 
 
+            
 
             Console.ReadLine();
         }
 
         static async Task ProcessImagesAsync()
-        {
-            // Setup the configuration to support document loading
+        {    
             var config = Configuration.Default.WithDefaultLoader();
-            
-            var address = "https://imgur.com";
-            // Asynchronously get the document in a new context using the configuration
-            var document = await BrowsingContext.New(config).OpenAsync(address);
-            // This CSS selector gets the desired content
-            var imgSelector = "img";
-            // Perform the query to get all imgs with the content
-            uris = document.QuerySelectorAll(imgSelector).Select(item => item.GetAttribute("src")).Take(5).ToList() ;   
+            var address = CatServer.Cutespaw;
+            var document = await BrowsingContext.New(config).OpenAsync(address);            
+            var imgSelector = CatServer.Selectors[address];             
+            uris = document.QuerySelectorAll(imgSelector).Select(item => item.GetAttribute("src")).Take(50).ToList() ;   
             
         }
 
@@ -60,13 +86,22 @@ namespace ConsoleApplication1
             WebClient webClient = new WebClient();
             try
             {
-                await webClient.DownloadFileTaskAsync("https:" + uri, filename);
+                await webClient.DownloadFileTaskAsync(uri, filename);
             }
             catch (Exception e)
             {
-
                 Console.WriteLine(e.Message);
             }
+        }
+
+        static void DetectCat(string image)
+        {
+            OpenCvSharp.CascadeClassifier cc = new OpenCvSharp.CascadeClassifier("haarcascade_frontalcatface.xml");
+            var img = new OpenCvSharp.Mat(image);
+            var img2 = new OpenCvSharp.Mat();
+            img.ConvertTo(img2, OpenCvSharp.MatType.CV_8U);
+            var cats = cc.DetectMultiScale(img2);
+            Console.WriteLine(cats.Length);
         }
 
     }
