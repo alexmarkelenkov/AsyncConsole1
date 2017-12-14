@@ -42,15 +42,7 @@ namespace ConsoleApplication1
                     Console.WriteLine(uri);
 
                     //WebClient webClient = new WebClient();
-                    //try
-                    //{
-                    //    webClient.DownloadFile(uri, Directory.GetCurrentDirectory().ToString() + "\\img\\cat" + i.ToString() + ".jpg");
-                    //}
-                    //catch (Exception e)
-                    //{
-
-                    //    Console.WriteLine(e.Message);
-                    //}
+                    //webClient.DownloadFile(uri, Directory.GetCurrentDirectory().ToString() + "\\img\\cat" + i.ToString() + ".jpg");                    
 
                     t = GetImageAsync(uri, Directory.GetCurrentDirectory().ToString() + "\\img\\cat" + i.ToString() + ".jpg");
                     imageSaveTasks.Add(t);
